@@ -1,0 +1,93 @@
+@startuml
+object PersistentState {
+  GetCurrentTerm()
+  SetCurrentTerm()
+  GetVotedFor()
+  SetVotedFor()
+  GetLogEntry()
+  AppendLogEntry()
+  DeleteLogEntriesAfterIndex()
+}
+
+object Follower {
+  HandleRequestVoteRequest()
+  HandleAppendEntriesRequest()
+}
+
+object FollowerDelegate {
+  UpdateCommitIndex()
+  FollowerAcceptedRequest()
+}
+
+object CandidateDelegate {
+  BecameLeader()
+}
+
+object Candidate {
+  HandleRequestVoteResponse()
+}
+
+object MatchIndexFinder
+object ReplicaTracker
+
+object LeaderDelegate {
+  UpdateCommitIndex()
+}
+
+object Leader {
+  ReplicateCommand()
+  HandleAppendEntriesResponse()
+}
+
+object Replica {
+  ReplicateCommand()
+  GetLeader()
+}
+
+object ReplicaDelegate {
+  ApplyReplicatedCommands()
+  LeaderStateChanged()
+}
+
+object ReplicaImpl
+
+object Application
+object Network
+object Scheduler
+
+ReplicaDelegate <|-- Application
+Application *-left- Replica
+Application *-- Network
+Application *-- PersistentState
+Application *-- Scheduler
+
+Replica o.up. ReplicaDelegate
+Replica <|-- ReplicaImpl
+
+ReplicaImpl o.up. Network
+ReplicaImpl o.. PersistentState
+ReplicaImpl o.up. Scheduler
+
+ReplicaImpl *-- Follower
+ReplicaImpl *-- Leader
+ReplicaImpl *-- Candidate
+
+LeaderDelegate <|-- ReplicaImpl
+CandidateDelegate <|-- ReplicaImpl
+FollowerDelegate <|-- ReplicaImpl
+
+Follower o.. PersistentState
+Follower o.up. FollowerDelegate
+
+Leader o.. PersistentState
+
+Leader o.up. LeaderDelegate
+Leader o.up. Network
+Leader o.up. Network
+Leader --> "*" ReplicaTracker
+ReplicaTracker --> MatchIndexFinder
+
+Candidate o.up. Network
+Candidate o.. PersistentState
+Candidate o.up. CandidateDelegate
+@enduml
